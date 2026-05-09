@@ -125,7 +125,6 @@ function [path, visit_nodes, deadlocks, x_act_history] = binn_ccpp(map, MAX_X, M
 
                 %选出得分最高的相邻未覆盖点，将其坐标记录至 next_x 和 next_y。
 
-
                 if val > best_val
                     best_val = val; 
                     next_x = nx; 
@@ -233,17 +232,44 @@ function [path, visit_nodes, deadlocks, x_act_history] = binn_ccpp(map, MAX_X, M
                 for p = 2:size(astar_p, 1)
                     rx = round(astar_p(p,1)); 
                     ry = round(astar_p(p,2));
+
+                    last_dir_x = rx - curr_x;
+                    last_dir_y = ry - curr_y;
+
+                    curr_x = rx;
+                    curr_y = ry;
                     path = [path; rx, ry];
                     visit_nodes = [visit_nodes; 1, rx, ry]; 
 
-            % 并在走的过程中，顺便把途径的未覆盖区域一并标记为已覆盖（状态 2）。
+            % 并在走的过程中，顺便把途径的未覆盖区域一并标记为已覆盖（状态 2）。并直接跳出循环
                     if grid_map(rx, ry) == 0
                         grid_map(rx, ry) = 2; 
+
+            %完成一次死区脱困后，将运动惯性方向重置（不再受到死胡同里来回打转的影响）。
+            %始终是以自上而下，自左而右覆盖
+                        if(abs(last_dir_x) == abs(last_dir_y))                   % 1,3 象限
+                            if(last_dir_x > 0 && last_dir_y >0)        % 1 象限
+                                last_dir_x = 0; 
+                                last_dir_y = 1; 
+                            else                                       % 3 象限
+                                last_dir_x = 0; 
+                                last_dir_y = -1; 
+                            end
+                        else    % 2,4 象限
+                            if(last_dir_x < 0 && last_dir_y > 0)       % 2 象限
+                                last_dir_x = 0; 
+                                last_dir_y = 1; 
+                            elseif(last_dir_x > 0 && last_dir_y < 0)   % 4 象限
+                                last_dir_x = 0; 
+                                last_dir_y = -1; 
+                            end
+                        end
+                        break;
                     end
                 end
             % 最后将机器人的当前坐标跳跃到 A* 的终点
-                curr_x = round(astar_p(end,1)); 
-                curr_y = round(astar_p(end,2));
+                % curr_x = round(astar_p(end,1)); 
+                % curr_y = round(astar_p(end,2));
             else
                 fprintf("no path can be found!"); %简单处理：万一 A* 寻路失败（是不可达）
                 curr_x = tx; 
@@ -252,8 +278,8 @@ function [path, visit_nodes, deadlocks, x_act_history] = binn_ccpp(map, MAX_X, M
                 visit_nodes = [visit_nodes; 1, tx, ty]; 
                 grid_map(tx, ty) = 2;
             end
-            last_dir_x = 0; 
-            last_dir_y = 1; %完成一次死区脱困后，将运动惯性方向重置（不再受到死胡同里来回打转的影响）。
+            % last_dir_x = 0; 
+            % last_dir_y = -1; %完成一次死区脱困后，将运动惯性方向重置（不再受到死胡同里来回打转的影响）。
         
             %没有陷入死区的正常处理分支
         else
@@ -280,7 +306,6 @@ function [path, visit_nodes, deadlocks, x_act_history] = binn_ccpp(map, MAX_X, M
                 path = [path; curr_x, curr_y];
                 visit_nodes = [visit_nodes; 1, curr_x, curr_y];
                 grid_map(curr_x, curr_y) = 2;
-                flag_up = 0;%运行完置零
             elseif(flag_up == 2)
                 last_dir_x = next_x - curr_x; 
                 last_dir_y = next_y - curr_y;
@@ -302,7 +327,6 @@ function [path, visit_nodes, deadlocks, x_act_history] = binn_ccpp(map, MAX_X, M
                 path = [path; curr_x, curr_y];
                 visit_nodes = [visit_nodes; 1, curr_x, curr_y];
                 grid_map(curr_x, curr_y) = 2;
-                flag_up = 0;
 
             elseif(flag_up == 3)
                 next_x = curr_x + dx(4); 
@@ -317,7 +341,6 @@ function [path, visit_nodes, deadlocks, x_act_history] = binn_ccpp(map, MAX_X, M
                 visit_nodes = [visit_nodes; 1, curr_x, curr_y];
                 % 并将到达的网格状态变更为已覆盖 2。
                 grid_map(curr_x, curr_y) = 2;
-                flag_up = 0;
 
 
             % 移动规则下
@@ -342,8 +365,6 @@ function [path, visit_nodes, deadlocks, x_act_history] = binn_ccpp(map, MAX_X, M
                 path = [path; curr_x, curr_y];
                 visit_nodes = [visit_nodes; 1, curr_x, curr_y];
                 grid_map(curr_x, curr_y) = 2;
-                flag_down = 0;
-
             elseif(flag_down == 2)
                 last_dir_x = next_x - curr_x; 
                 last_dir_y = next_y - curr_y;
@@ -365,7 +386,6 @@ function [path, visit_nodes, deadlocks, x_act_history] = binn_ccpp(map, MAX_X, M
                 path = [path; curr_x, curr_y];
                 visit_nodes = [visit_nodes; 1, curr_x, curr_y];
                 grid_map(curr_x, curr_y) = 2;
-                flag_down = 0;
 
             elseif(flag_down == 3)
                 next_x = curr_x + dx(4); 
@@ -380,7 +400,6 @@ function [path, visit_nodes, deadlocks, x_act_history] = binn_ccpp(map, MAX_X, M
                 visit_nodes = [visit_nodes; 1, curr_x, curr_y];
                 % 并将到达的网格状态变更为已覆盖 2。
                 grid_map(curr_x, curr_y) = 2;
-                flag_down = 0;
 
             % 移动规则左
             elseif(flag_left == 1)
@@ -396,7 +415,6 @@ function [path, visit_nodes, deadlocks, x_act_history] = binn_ccpp(map, MAX_X, M
                 visit_nodes = [visit_nodes; 1, curr_x, curr_y];
                 % 并将到达的网格状态变更为已覆盖 2。
                 grid_map(curr_x, curr_y) = 2;
-                flag_left = 1;
 
             % 移动规则右
             elseif(flag_right == 1)
@@ -412,13 +430,28 @@ function [path, visit_nodes, deadlocks, x_act_history] = binn_ccpp(map, MAX_X, M
                 visit_nodes = [visit_nodes; 1, curr_x, curr_y];
                 % 并将到达的网格状态变更为已覆盖 2。
                 grid_map(curr_x, curr_y) = 2;
-                flag_right = 1;
 
             else
                 %更新机器人的上一时刻运动方向（用新坐标减去旧坐标）。
                 % 然后将当前游标 curr_x, curr_y 推进到选出的最佳点，追加到路径数组中，            
                 last_dir_x = next_x - curr_x; 
                 last_dir_y = next_y - curr_y;
+                if(abs(last_dir_x) == abs(last_dir_y))           % 1,3 象限
+                    if(last_dir_x > 0 && last_dir_y >0)% 1 象限
+                        last_dir_x = 0; 
+                        last_dir_y = 1; 
+                    elseif(last_dir_x < 0 && last_dir_y < 0)           % 3 象限
+                        last_dir_x = 0; 
+                        last_dir_y = -1; 
+                   % 2,4 象限
+                    elseif(last_dir_x < 0 && last_dir_y > 0)        % 2 象限
+                        last_dir_x = 0; 
+                        last_dir_y = 1; 
+                    elseif(last_dir_x > 0 && last_dir_y < 0)             % 4 象限
+                        last_dir_x = 0; 
+                        last_dir_y = -1; 
+                    end
+                end
                 curr_x = next_x; 
                 curr_y = next_y;
                 path = [path; curr_x, curr_y];

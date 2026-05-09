@@ -19,19 +19,14 @@ MAX_Y = 20;
 
 %%
 % BINN全覆盖路径规划
-%BINN——test
-% 运行基于 BINN 的改进全覆盖路径规划算法
-% [path, visit_nodes] = binn_ccpp(map, MAX_X, MAX_Y);
-% %BINN可视化
-% visualize_map(map, path, visit_nodes);
 
-% [修改] 1. 调用新生成的固定障碍物地图，不再使用随机地图
+%  1. 调用新生成的固定障碍物地图，不再使用随机地图
 map = fixed_obstacle_map(xStart, yStart, xTarget, yTarget, MAX_X, MAX_Y);
 
-% [修改] 2. 运行算法，注意现在多接收了一个 x_act_history 参数用于独立渲染 3D
+%  2. 运行算法，注意现在多接收了一个 x_act_history 参数用于独立渲染 3D
 [path, visit_nodes, deadlocks, x_act_history] = binn_ccpp(map, MAX_X, MAX_Y);
 
-% [修改] 3. 调用全新的专用可视化函数
+%  3. 调用全新的专用可视化函数
 Binn_visualize_results(map, path, visit_nodes, deadlocks, x_act_history, MAX_X, MAX_Y);
 
 %%

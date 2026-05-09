@@ -14,10 +14,12 @@ function map = fixed_obstacle_map(xStart, yStart, xTarget, yTarget, MAX_X, MAX_Y
     for i = 6:7, obs = [obs; i, 19]; end
     for j = 17:19, obs = [obs; 7, j]; end
 
+    for i = 15:16, obs = [obs; i, 2]; end
+    for j = 2:5, obs = [obs; 16, j]; end
     % 
-    % for i = 12:14, obs = [obs; i, 16]; end
-    % for j = 12:14, obs = [obs; j, 17]; end
-    % for k = 12:14, obs = [obs; k, 18]; end
+    for i = 12:15, obs = [obs; i, 16]; end
+    for j = 12:15, obs = [obs; j, 17]; end
+    for k = 12:15, obs = [obs; k, 18]; end
 
     %边界
     for a = 1:20, obs = [obs; a, 1]; end
